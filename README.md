@@ -1,11 +1,11 @@
-# AiToolkit 🤖
+# AiManagerToolkit 🤖
 
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![AzureOpenAI](https://img.shields.io/badge/Azure%20OpenAI-✔️-blue)
 ![OpenAI](https://img.shields.io/badge/OpenAI-✔️-brightgreen)
 
-`AiToolkit` es una librería Python diseñada para simplificar la interacción con las APIs de OpenAI y Azure OpenAI. Esta herramienta proporciona una forma flexible y eficiente de gestionar conversaciones con modelos de lenguaje, integrar herramientas personalizadas y generar respuestas estructuradas, ideal para desarrolladores que buscan aprovechar la potencia de la inteligencia artificial en sus aplicaciones.
+`AiManagerToolkit` es una librería Python diseñada para simplificar la interacción con las APIs de OpenAI y Azure OpenAI. Esta herramienta proporciona una forma flexible y eficiente de gestionar conversaciones con modelos de lenguaje, integrar herramientas personalizadas y generar respuestas estructuradas, ideal para desarrolladores que buscan aprovechar la potencia de la inteligencia artificial en sus aplicaciones.
 
 ## Características ✨
 
@@ -17,10 +17,10 @@
 
 ## Instalación 🚀
 
-Puedes instalar `AiToolkit` desde PyPI utilizando pip:
+Puedes instalar `AiManagerToolkit` desde PyPI utilizando pip:
 
 ```bash
-pip install AiToolkit
+pip install AiManagerToolkit
 ```
 
 ## Uso Básico 💻
@@ -45,7 +45,7 @@ AZURE_OPENAI_API_VERSION=2023-05-15
 Puedes pasar la configuración directamente en tu código:
 
 ```python
-from AiToolkit import AzureAiToolkit
+from AiManagerToolkit import AzureAiToolkit
 
 # Inicializa la herramienta con configuración personalizada
 azure_ai = AzureAiToolkit(
@@ -59,7 +59,7 @@ azure_ai = AzureAiToolkit(
 ### 2. Ejemplo de Uso Sincrónico 🔄
 
 ```python
-from AiToolkit import AzureAiToolkit, user
+from AiManagerToolkit import AzureAiToolkit, user
 
 # Inicializa la herramienta con la configuración predeterminada o personalizada
 azure_ai = AzureAiToolkit()
@@ -73,7 +73,7 @@ print(response)
 ### 3. Ejemplo de Uso con Herramientas 🔧
 
 ```python
-from AiToolkit import Tool, Toolbox, AzureAiToolkit, user
+from AiManagerToolkit import Tool, Toolbox, AzureAiToolkit, user
 
 # Definir una nueva herramienta
 tool = Tool(
@@ -105,7 +105,7 @@ print(response)
 El sistema de logging integrado te permite personalizar el nivel de log y elegir si quieres guardar los logs en un archivo o solo en consola.
 
 ```python
-from AiToolkit import log
+from AiManagerToolkit import log
 
 # Cambia el nivel de logging
 log.setLevel("INFO")
@@ -137,4 +137,4 @@ Este proyecto está licenciado bajo la Licencia MIT - consulta el archivo [LICEN
 
 ---
 
-¡Gracias por usar `AiToolkit`! Si tienes alguna pregunta o sugerencia, no dudes en abrir un issue en el repositorio. 😊
+¡Gracias por usar `AiManagerToolkit`! Si tienes alguna pregunta o sugerencia, no dudes en abrir un issue en el repositorio. 😊
