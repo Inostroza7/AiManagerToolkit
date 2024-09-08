@@ -8,7 +8,7 @@ setup(
     description="A toolkit for working with OpenAI and Azure OpenAI API",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/AiToolkit",
+    url="https://github.com/Inostroza-Wingsoft/AiManagerToolkit",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -23,7 +23,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'aitoolkit=AiToolkit:main',
+            'aimanagertoolkit=AiManagerToolkit:main',
         ],
     },
 )

@@ -132,7 +132,6 @@ class AzureAiToolkit:
                 stream=True,
                 tools=tools or self.tools,
                 tool_choice=self.tool_choice if (tools or self.tools) else None,
-                function_call=self.function_call
             )
 
             for chunk in response:
@@ -147,7 +146,13 @@ class AzureAiToolkit:
     # Chat Sincrónico (Formato Estructurado)
     ####################################################
     
-    def str_output(self, messages, schema, temperature=None):
+    def str_output(
+            self, 
+            messages, 
+            schema, 
+            temperature=None,
+            tools=None
+            ):
         """
         Crea completaciones de chat utilizando la API de Azure OpenAI con salida estructurada según un JSON Schema.
 
