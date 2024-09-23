@@ -7,6 +7,7 @@ from openai import AzureOpenAI, AsyncAzureOpenAI
 from pydantic import BaseModel
 from .log import log
 from dotenv import load_dotenv
+import numpy as np
 
 # Carga las variables de entorno desde un archivo .env
 load_dotenv(override=True)
@@ -17,9 +18,9 @@ load_dotenv(override=True)
 
 class AzureAiToolkit:
     def __init__(self, 
-                 model=None, 
+                 model=None,
+                 embeddings_model=None,
                  azure_endpoint=None, 
-                 azure_deployment=None,
                  api_key=None, 
                  api_version=None, 
                  temperature=None, 
@@ -42,20 +43,19 @@ class AzureAiToolkit:
         - tools (list): Herramientas adicionales que se pueden usar en el proceso.
         - tool_choice (str): La herramienta seleccionada para esta solicitud específica.
         """
-        self.model = model or os.getenv("AZURE_OPENAI_MODEL")
+        self.model = model or os.getenv("AZURE_OPENAI_DEPLOYMENT")
+        self.embeddings_model = embeddings_model or os.getenv("AZURE_OPENAI_EMBEDDINGS_MODEL") or "text-embedding-3-small"
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.client = AzureOpenAI(
             azure_endpoint=azure_endpoint or os.getenv("AZURE_OPENAI_ENDPOINT"),
             api_key=api_key or os.getenv("AZURE_OPENAI_API_KEY"),
             api_version=api_version or os.getenv("AZURE_OPENAI_API_VERSION"),
-            azure_deployment=azure_deployment or os.getenv("AZURE_OPENAI_DEPLOYMENT"),
         )
         self.async_client = AsyncAzureOpenAI(
             azure_endpoint=azure_endpoint or os.getenv("AZURE_OPENAI_ENDPOINT"),
             api_key=api_key or os.getenv("AZURE_OPENAI_API_KEY"),
             api_version=api_version or os.getenv("AZURE_OPENAI_API_VERSION"),
-            azure_deployment=azure_deployment or os.getenv("AZURE_OPENAI_DEPLOYMENT"),
         )
         self.response_format = response_format
         self.tools = tools
@@ -67,7 +67,7 @@ class AzureAiToolkit:
     ####################################################
     
     def chat(self,
-             messages,
+             messages: list,
              temperature=None,
              tools=None,
              response_format=None):
@@ -105,7 +105,7 @@ class AzureAiToolkit:
     ####################################################
 
     def stream(self,
-                messages,
+                messages: list,
                 temperature=None,
                 tools=None,
                 response_format=None
@@ -146,13 +146,12 @@ class AzureAiToolkit:
     # Chat Sincrónico (Formato Estructurado)
     ####################################################
     
-    def str_output(
-            self, 
-            messages, 
-            schema, 
-            temperature=None,
-            tools=None
-            ):
+    def str_output(self, 
+                   messages: list, 
+                   response_format, 
+                   temperature=None,
+                   tools=None
+                   ):
         """
         Crea completaciones de chat utilizando la API de Azure OpenAI con salida estructurada según un JSON Schema.
 
@@ -169,13 +168,196 @@ class AzureAiToolkit:
                 model=self.model,
                 messages=messages,
                 temperature=temperature or self.temperature,
-                response_format=schema
+                response_format=response_format,
             )
             return completion
         except Exception as e:
             log.error(f"Ocurrió un error al generar una salida estructurada: {e}")
             return None
 
+    ####################################################
+    # Embeddings
+    ####################################################
+
+    def embeddings(self,
+                   input: str,
+                   model: str = None,
+                   ):
+        """
+        Genera representaciones vectoriales (embeddings) de texto utilizando la API de OpenAI.
+
+        Args:
+            input (str): El texto de entrada para el cual se quieren generar los embeddings.
+            model (str, opcional): El modelo de embeddings a utilizar. Puede ser uno de los siguientes:
+                - 'text-embedding-3-small' (por defecto)
+                - 'text-embedding-ada-002' 
+                - 'text-embedding-3-large'
+
+        Returns:
+            dict: La respuesta de la API de OpenAI que contiene los embeddings generados para el texto de entrada.
+                Devuelve None en caso de error.
+        """
+        try:
+            input = input.replace("\n", " ") # Elimina saltos de línea del texto de entrada para evitar errores
+            response = self.client.embeddings.create(
+                input=input,
+                model=model or self.embeddings_model,
+            )
+            return response
+        except Exception as e:
+            log.error(f"Ocurrió un error al generar los embeddings: {e}")
+            return None
+
+    def cosine_similarity(self, 
+                          a: list, 
+                          b: list,
+                          ):
+        """
+        Calcula la similitud coseno entre dos vectores.
+
+        La similitud coseno es una métrica utilizada para medir cuán similares son dos vectores en un espacio de alta dimensionalidad. 
+        Se utiliza comúnmente en tareas de procesamiento de lenguaje natural (NLP) y aprendizaje automático, especialmente para comparar embeddings de texto.
+
+        La fórmula para la similitud coseno es:
+        
+            similitud_coseno = (a · b) / (||a|| * ||b||)
+
+        donde "a · b" es el producto punto entre los dos vectores, y ||a|| y ||b|| son las magnitudes (normas) de los vectores.
+
+        Args:
+            a (np.ndarray): El primer vector (como array de numpy).
+            b (np.ndarray): El segundo vector (como array de numpy).
+
+        Returns:
+            float: Un valor entre -1 y 1 que representa la similitud coseno entre los dos vectores. Un valor cercano a 1 indica alta similitud, 
+            mientras que un valor cercano a -1 indica alta disimilitud.
+
+        Ejemplo:
+            >>> vector_a = np.array([1, 2, 3])
+            >>> vector_b = np.array([4, 5, 6])
+            >>> cosine_similarity(vector_a, vector_b)
+            0.9746318461970762
+        """
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+    ####################################################
+    # Speech to Text - STT
+    ####################################################
+
+    def transcribe(self,
+                   file_path,
+                   model="whisper", 
+                   response_format="text", 
+                   language=None, 
+                   temperature=None,
+                   timestamp_granularities=None,
+                   ):
+        """
+        Transcribe un archivo de audio utilizando la API de OpenAI.
+
+        Args:
+            file_path (str): Ruta al archivo de audio a transcribir en formato flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm.
+            model (str, opcional): Modelo a utilizar para la transcripción. Por defecto es "whisper-1".
+            response_format (str, opcional): Formato de la respuesta ("json", "text", "srt", "verbose_json", "vtt"). Por defecto es "json".
+            language (str, opcional): Código de idioma ISO-639-1 del idioma de entrada. Si no se especifica, se detectará automáticamente ("sp" - Spanish). 
+            temperature (float, opcional): Temperatura de muestreo para la generación de tokens. Valores más altos aumentan la creatividad.
+            timestamp_granularities (list, opcional): Lista de granularidades de marca de tiempo ("segment", "word").
+
+        Returns:
+            dict or str: La transcripción del audio en el formato especificado.
+        """
+        try:
+            with open(file_path, "rb") as audio_file:
+                transcription = self.client.audio.transcriptions.create(
+                    model=model,
+                    file=audio_file,
+                    response_format=response_format,
+                    language=language,
+                    temperature=temperature or self.temperature,
+                    timestamp_granularities=timestamp_granularities
+                )
+            return transcription
+        except Exception as e:
+            log.error(f"Ocurrió un error durante la transcripción: {e}")
+            return None
+
+    def translate(self,
+                  file_path, 
+                  model="whisper", 
+                  response_format="text", 
+                  temperature=None,
+                  ):
+        """
+        Traduce y transcribe un archivo de audio a inglés utilizando la API de OpenAI.
+
+        Args:
+            file_path (str): Ruta al archivo de audio a traducir.
+            model (str, opcional): Modelo a utilizar para la traducción. Por defecto es "whisper-1".
+            response_format (str, opcional): Formato de la respuesta ("json", "text", "srt", "verbose_json", "vtt"). Por defecto es "json".
+            temperature (float, opcional): Temperatura de muestreo para la generación de tokens. Valores más altos aumentan la creatividad.
+            timestamp_granularities (list, opcional): Lista de granularidades de marca de tiempo ("segment", "word").
+
+        Returns:
+            dict or str: La traducción del audio a texto en inglés en el formato especificado.
+        """
+        try:
+            with open(file_path, "rb") as audio_file:
+                translation = self.client.audio.translations.create(
+                    model=model,
+                    file=audio_file,
+                    response_format=response_format,
+                    temperature=temperature or self.temperature,
+                )
+            return translation
+        except Exception as e:
+            log.error(f"Ocurrió un error durante la traducción: {e}")
+            return None
+        
+    ####################################################
+    # Text to Speech - TTS
+    ####################################################
+
+    def speech(self, 
+                       text, 
+                       output_file_path="output.mp3", 
+                       model="tts", 
+                       voice="alloy", 
+                       response_format="mp3",
+                       speed=1.0):
+        """
+        Genera audio hablado a partir de texto utilizando la API de OpenAI.
+
+        Args:
+            text (str): El texto que se convertirá en audio.
+            output_file_path (str): Ruta del archivo donde se guardará el audio generado.
+            model (str, opcional): Modelo a utilizar para la generación de voz. Opciones: "tts" (estándar) o "tts-hd" (alta definición). Por defecto es "tts".
+            voice (str, opcional): Voz a utilizar. Opciones: "alloy", "echo", "fable", "onyx", "nova", "shimmer". Por defecto es "alloy".
+            response_format (str, opcional): Formato del archivo de audio de salida. Opciones: "mp3", "opus", "aac", "flac", "pcm". Por defecto es "mp3".
+            speed (float, opcional): Velocidad de la voz. Rango de 0.25 a 4.0. Por defecto es 1.0.
+
+        Returns:
+            bool: True si la generación y guardado del audio fue exitosa, False en caso contrario.
+        """
+        try:
+            response = self.client.audio.speech.create(
+                model=model,
+                voice=voice,
+                input=text,
+                response_format=response_format,
+                speed=speed
+            )
+
+            # Guardar el audio en un archivo
+            with open(output_file_path, 'wb') as audio_file:
+                for chunk in response.iter_bytes():
+                    audio_file.write(chunk)
+
+            log.info(f"Audio generado y guardado exitosamente en {output_file_path}")
+            return
+
+        except Exception as e:
+            log.error(f"Ocurrió un error durante la generación de audio: {e}")
+            return
 
 ####################################################
 # Documentación Adicional Basada en la API Oficial

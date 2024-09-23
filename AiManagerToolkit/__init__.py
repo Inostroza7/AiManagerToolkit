@@ -1,10 +1,10 @@
 from .log import Log
-from .azure_sync_ai import AzureAiToolkit
-from .sync_ai import OpenAiToolkit
+from .sync_azure import AzureAiToolkit
+from .sync_openai import OpenAiToolkit
 from .messages import user, assistant, system
 from .toolbox import Tool, Toolbox
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 __all__ = [

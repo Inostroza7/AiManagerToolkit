@@ -2,17 +2,19 @@
 
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![AzureOpenAI](https://img.shields.io/badge/Azure%20OpenAI-✔️-blue)
-![OpenAI](https://img.shields.io/badge/OpenAI-✔️-brightgreen)
+![Azure OpenAI](https://img.shields.io/badge/Azure%20OpenAI-✔️-blue)
 
-`AiManagerToolkit` es una librería Python diseñada para simplificar la interacción con las APIs de OpenAI y Azure OpenAI. Esta herramienta proporciona una forma flexible y eficiente de gestionar conversaciones con modelos de lenguaje, integrar herramientas personalizadas y generar respuestas estructuradas, ideal para desarrolladores que buscan aprovechar la potencia de la inteligencia artificial en sus aplicaciones.
+`AiManagerToolkit` es una librería Python diseñada para simplificar la interacción con la API de Azure OpenAI. Esta herramienta proporciona una forma flexible y eficiente de gestionar conversaciones con modelos de lenguaje, integrar herramientas personalizadas, generar respuestas estructuradas, y manejar funcionalidades de voz y texto, ideal para desarrolladores que buscan aprovechar la potencia de la inteligencia artificial en sus aplicaciones.
 
 ## Características ✨
 
-- **Soporte para OpenAI y Azure OpenAI:** Fácil integración con ambas plataformas.
+- **Soporte para Azure OpenAI:** Fácil integración con la plataforma de Azure.
 - **Herramientas Personalizadas:** Define y registra herramientas para mejorar las interacciones con el modelo.
 - **Salidas Estructuradas:** Genera respuestas en formato JSON basadas en esquemas definidos.
-- **Chat Sincrónico y Asíncrono:** Manejo de conversaciones tanto en modo sincrónico como en streaming.
+- **Chat Sincrónico y Streaming:** Manejo de conversaciones tanto en modo sincrónico como en streaming.
+- **Embeddings:** Generación y manejo de embeddings de texto.
+- **Speech to Text (STT):** Transcripción y traducción de audio a texto.
+- **Text to Speech (TTS):** Generación de audio a partir de texto.
 - **Logging Configurable:** Sistema de logging integrado para monitorear y depurar las interacciones.
 
 ## Instalación 🚀
@@ -27,17 +29,18 @@ pip install AiManagerToolkit
 
 ### 1. Configuración Inicial 🛠️
 
-Puedes configurar la conexión a las APIs de OpenAI o Azure OpenAI utilizando variables de entorno o parámetros en el código.
+Configura la conexión a la API de Azure OpenAI utilizando variables de entorno o parámetros en el código.
 
 #### Configuración utilizando `.env` 🌐
 
 Crea un archivo `.env` en el directorio raíz de tu proyecto con las credenciales necesarias:
 
 ```env
-AZURE_OPENAI_MODEL=gpt-4o
+AZURE_OPENAI_DEPLOYMENT=gpt-4o
 AZURE_OPENAI_ENDPOINT=https://tu-endpoint.azure.com/
 AZURE_OPENAI_API_KEY=tu-clave-api
-AZURE_OPENAI_API_VERSION=2023-05-15
+AZURE_OPENAI_API_VERSION=2024-06-01
+AZURE_OPENAI_EMBEDDINGS_MODEL=text-embedding-3-small
 ```
 
 #### Configuración en el Código 🔧
@@ -47,7 +50,6 @@ Puedes pasar la configuración directamente en tu código:
 ```python
 from AiManagerToolkit import AzureAiToolkit
 
-# Inicializa la herramienta con configuración personalizada
 azure_ai = AzureAiToolkit(
     model="gpt-4o",
     azure_endpoint="https://tu-endpoint.azure.com/",
@@ -56,62 +58,45 @@ azure_ai = AzureAiToolkit(
 )
 ```
 
-### 2. Ejemplo de Uso Sincrónico 🔄
+### 2. Ejemplo de Uso de Chat 🔄
 
 ```python
-from AiManagerToolkit import AzureAiToolkit, user
+from AiManagerToolkit import AzureAiToolkit
 
-# Inicializa la herramienta con la configuración predeterminada o personalizada
 azure_ai = AzureAiToolkit()
 
-# Crear un mensaje de usuario y obtener la respuesta
-messages = [user("¿Cuál es el estado de mi pedido?")]
+messages = [{"role": "user", "content": "¿Cuál es el estado de mi pedido?"}]
 response = azure_ai.chat(messages)
-print(response)
+print(response.choices[0].message.content)
 ```
 
-### 3. Ejemplo de Uso con Herramientas 🔧
+### 3. Generación de Embeddings 📊
 
 ```python
-from AiManagerToolkit import Tool, Toolbox, AzureAiToolkit, user
-
-# Definir una nueva herramienta
-tool = Tool(
-    name="get_weather",
-    description="Obtén el clima para una ubicación dada",
-    parameters={
-        "type": "object",
-        "properties": {
-            "location": {"type": "string", "description": "Ubicación para el clima"},
-            "unit": {"type": "string", "enum": ["C", "F"], "description": "Unidad de temperatura"}
-        },
-        "required": ["location", "unit"]
-    },
-    strict=True
-)
-
-# Registrar la herramienta
-Toolbox.register_tool(tool)
-
-# Usar la herramienta en una conversación
-messages = [user("¿Cómo está el clima en Santiago?")]
-azure_ai = AzureAiToolkit()
-response = azure_ai.chat(messages, tools=Toolbox.get_tools())
-print(response)
+embedding = azure_ai.embeddings("Texto para generar embedding")
+print(embedding.data[0].embedding)
 ```
 
-### 4. Logging Personalizado 📜
-
-El sistema de logging integrado te permite personalizar el nivel de log y elegir si quieres guardar los logs en un archivo o solo en consola.
+### 4. Transcripción de Audio 🎙️
 
 ```python
-from AiManagerToolkit import log
+transcription = azure_ai.transcribe("ruta/al/archivo/audio.mp3")
+print(transcription)
+```
 
-# Cambia el nivel de logging
-log.setLevel("INFO")
+### 5. Generación de Voz 🔊
 
-# Loggea un mensaje
-log.info("Este es un mensaje de información.")
+```python
+azure_ai.speech("Texto para convertir en voz", output_file_path="salida.mp3")
+```
+
+### 6. Cálculo de Similitud Coseno 📐
+
+```python
+vector1 = [1, 2, 3]
+vector2 = [4, 5, 6]
+similarity = azure_ai.cosine_similarity(vector1, vector2)
+print(f"Similitud coseno: {similarity}")
 ```
 
 ## Contribuciones 👥
@@ -126,10 +111,10 @@ log.info("Este es un mensaje de información.")
 
 ## Roadmap 🛤️
 
-- [ ] Integración con otras plataformas de IA.
 - [ ] Mejoras en la documentación con ejemplos avanzados.
 - [ ] Añadir más tests unitarios y de integración.
 - [ ] Soporte para operaciones avanzadas con Azure OpenAI.
+- [ ] Integración con más servicios de Azure AI.
 
 ## Licencia 📄
 
