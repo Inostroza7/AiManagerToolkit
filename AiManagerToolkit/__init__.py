@@ -1,10 +1,20 @@
 from .log import Log
 from .sync_azure import AzureAiToolkit
 from .sync_openai import OpenAiToolkit
-from .messages import user, assistant, system
 from .toolbox import Tool, Toolbox
+from .messages import (
+    SystemMessage,
+    UserMessage,
+    AssistantMessage,
+    PromptTemplate,
+    SystemTemplate,
+    UserTemplate,
+    AssistantTemplate,
+    History,
+    Message
+)
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 
 __all__ = [
@@ -13,7 +23,13 @@ __all__ = [
     'Tool',
     'Toolbox',
     'Log',
-    'user',
-    'assistant',
-    'system',
+    'SystemMessage',
+    'UserMessage',
+    'AssistantMessage',
+    'PromptTemplate',
+    'SystemTemplate',
+    'UserTemplate',
+    'AssistantTemplate',
+    'History',
+    'Message'
 ]

@@ -16,6 +16,7 @@
 - **Speech to Text (STT):** Transcripción y traducción de audio a texto.
 - **Text to Speech (TTS):** Generación de audio a partir de texto.
 - **Logging Configurable:** Sistema de logging integrado para monitorear y depurar las interacciones.
+- **Manejo Avanzado de Mensajes:** Nueva clase Message para una gestión eficiente de conversaciones y tipos de contenido.
 
 ## Instalación 🚀
 
@@ -98,6 +99,23 @@ vector2 = [4, 5, 6]
 similarity = azure_ai.cosine_similarity(vector1, vector2)
 print(f"Similitud coseno: {similarity}")
 ```
+
+### 7. Manejo Avanzado de Mensajes 💬
+
+```python
+from AiManagerToolkit import Message, SystemMessage, UserMessage
+
+# Iniciar una conversación
+conversation = Message(SystemMessage("Eres un asistente útil."))
+
+# Añadir mensajes a la conversación
+conversation.add_message(UserMessage("Hola, ¿cómo estás?"))
+conversation.add_message("¿Puedes ayudarme con una tarea?")
+
+# Obtener la conversación completa
+full_conversation = conversation.get_full_conversation()
+```
+
 
 ## Contribuciones 👥
 
