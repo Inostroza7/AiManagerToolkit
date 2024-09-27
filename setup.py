@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="AiManagerToolkit",
-    version="0.1.2",
+    version="0.1.3",
     author="Gustavo Inostroza",
     author_email="gusinostrozar@gmail.com",
     description="A toolkit for working with OpenAI and Azure OpenAI API",
