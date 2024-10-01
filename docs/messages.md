@@ -9,6 +9,7 @@ Este módulo proporciona una estructura flexible para manejar conversaciones y m
 - Sistema de plantillas para crear mensajes fácilmente
 - Manejo de historial de conversaciones con límite opcional
 - Conversión fácil entre objetos de Python y representaciones de diccionario
+- Logging integrado para un mejor seguimiento y depuración
 
 ## Instalación
 
@@ -21,6 +22,7 @@ Para usar este módulo, asegúrate de tener Python 3.6 o superior instalado. Lue
 ```python
 from messages import SystemMessage, UserMessage, AssistantMessage, Message, History
 from messages import SystemTemplate, UserTemplate, AssistantTemplate
+from messages import TextContent, ImageUrlContent
 ```
 
 ### Creación de mensajes básicos
@@ -34,6 +36,9 @@ user_msg = UserMessage("Hola, ¿cómo estás?")
 
 # Crear un mensaje del asistente
 assistant_msg = AssistantMessage("¡Hola! Estoy bien, gracias por preguntar. ¿En qué puedo ayudarte hoy?")
+
+# Crear mensajes con múltiples tipos de contenido
+user_msg_with_image = UserMessage("Mira esta imagen", "https://ejemplo.com/imagen.jpg")
 ```
 
 ### Uso de plantillas
@@ -99,6 +104,10 @@ Clase para manejar el historial de conversación.
 
 ### `Message`
 Clase principal para manejar mensajes y conversaciones.
+
+## Logging
+
+El módulo utiliza logging para registrar información importante y errores. Asegúrate de configurar el logging en tu aplicación para aprovechar esta funcionalidad.
 
 ## Contribuciones
 

@@ -1,6 +1,8 @@
+from .__version__ import __version__
+
 from .log import Log
-from .sync_azure import AzureAiToolkit
-from .sync_openai import OpenAiToolkit
+from .ai.azure_ai import AzureAI
+from .ai.openai_ai import OpenAI
 from .toolbox import Tool, Toolbox
 from .messages import (
     SystemMessage,
@@ -14,12 +16,11 @@ from .messages import (
     Message
 )
 
-__version__ = "0.1.3"
 
 
 __all__ = [
-    'AzureAiToolkit',
-    'OpenAiToolkit',
+    'AzureAI',
+    'OpenAI',
     'Tool',
     'Toolbox',
     'Log',

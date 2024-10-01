@@ -1,8 +1,13 @@
 from setuptools import setup, find_packages
+from aimanagertoolkit import __version__
+from pathlib import Path
+
+with Path("requirements.txt").open() as f:
+    install_requires = f.read().splitlines()
 
 setup(
     name="AiManagerToolkit",
-    version="0.1.3",
+    version=__version__,
     author="Gustavo Inostroza",
     author_email="gusinostrozar@gmail.com",
     description="A toolkit for working with OpenAI and Azure OpenAI API",
@@ -16,12 +21,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.7',
-    install_requires=[
-        "openai",
-        "pydantic",
-        "python-dotenv",
-        "numpy",
-    ],
+    install_requires=install_requires,
     entry_points={
         'console_scripts': [
             'aimanagertoolkit=AiManagerToolkit:main',

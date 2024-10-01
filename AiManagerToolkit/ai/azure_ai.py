@@ -3,9 +3,9 @@
 ####################################################
 
 import os
-from openai import OpenAI, AsyncOpenAI
+from openai import AzureOpenAI, AsyncAzureOpenAI
 from pydantic import BaseModel
-from .log import log
+from ..log import log
 from dotenv import load_dotenv
 import numpy as np
 
@@ -13,14 +13,16 @@ import numpy as np
 load_dotenv(override=True)
 
 ####################################################
-# Clase OpenAI Toolkit (Versión Síncrona)
+# Clase Azure AI Toolkit (Versión Síncrona)
 ####################################################
 
-class OpenAiToolkit:
+class AzureAI:
     def __init__(self, 
-                 model=None, 
+                 model=None,
                  embeddings_model=None,
+                 azure_endpoint=None, 
                  api_key=None, 
+                 api_version=None, 
                  temperature=None, 
                  max_tokens=None,
                  response_format=None,
@@ -28,42 +30,49 @@ class OpenAiToolkit:
                  tool_choice=None,
                  ):
         """
-        Inicializa una instancia de OpenAiToolkit para manejar interacciones con OpenAI.
+        Inicializa una instancia de AzureAiToolkit para manejar interacciones con Azure OpenAI.
 
         Parámetros:
-        - model (str): El modelo de OpenAI a utilizar. Si no se especifica, se obtiene de la variable de entorno 'OPENAI_MODEL'.
-        - api_key (str): La clave API para autenticar las solicitudes a OpenAI. Si no se especifica, se obtiene de la variable de entorno 'OPENAI_API_KEY'.
+        - model (str): El modelo de Azure OpenAI a utilizar. Si no se especifica, se obtiene de la variable de entorno 'AZURE_OPENAI_MODEL'.
+        - azure_endpoint (str): El endpoint de Azure OpenAI. Si no se especifica, se obtiene de la variable de entorno 'AZURE_OPENAI_ENDPOINT'.
+        - api_key (str): La clave API para autenticar las solicitudes a Azure OpenAI. Si no se especifica, se obtiene de la variable de entorno 'AZURE_OPENAI_API_KEY'.
+        - api_version (str): La versión de la API de Azure OpenAI. Si no se especifica, se obtiene de la variable de entorno 'AZURE_OPENAI_API_VERSION'.
         - temperature (float): Parámetro que controla la aleatoriedad de las respuestas. Valores más bajos dan respuestas más conservadoras.
         - max_tokens (int): El número máximo de tokens a generar en la respuesta.
         - response_format (str): Formato de la respuesta (puede ser 'json', 'json_schema', 'text', etc.).
         - tools (list): Herramientas adicionales que se pueden usar en el proceso.
         - tool_choice (str): La herramienta seleccionada para esta solicitud específica.
         """
-        self.model = model or os.getenv("OPENAI_MODEL")
-        self.embeddings_model = embeddings_model or os.getenv("OPENAI_EMBEDDINGS_MODEL") or "text-embedding-3-small"
+        self.model = model or os.getenv("AZURE_OPENAI_DEPLOYMENT")
+        self.embeddings_model = embeddings_model or os.getenv("AZURE_OPENAI_EMBEDDINGS_MODEL") or "text-embedding-3-small"
         self.temperature = temperature
         self.max_tokens = max_tokens
-        self.client = OpenAI(
-            api_key=api_key or os.getenv("OPENAI_API_KEY")
+        self.client = AzureOpenAI(
+            azure_endpoint=azure_endpoint or os.getenv("AZURE_OPENAI_ENDPOINT"),
+            api_key=api_key or os.getenv("AZURE_OPENAI_API_KEY"),
+            api_version=api_version or os.getenv("AZURE_OPENAI_API_VERSION"),
         )
-        self.async_client = AsyncOpenAI(
-            api_key=api_key or os.getenv("OPENAI_API_KEY")
+        self.async_client = AsyncAzureOpenAI(
+            azure_endpoint=azure_endpoint or os.getenv("AZURE_OPENAI_ENDPOINT"),
+            api_key=api_key or os.getenv("AZURE_OPENAI_API_KEY"),
+            api_version=api_version or os.getenv("AZURE_OPENAI_API_VERSION"),
         )
         self.response_format = response_format
         self.tools = tools
         self.tool_choice = tool_choice
+
 
     ####################################################
     # Chat Sincrónico (Respuesta Completa)
     ####################################################
     
     def chat(self,
-             messages,
+             messages: list,
              temperature=None,
              tools=None,
              response_format=None):
         """
-        Crea completaciones de chat utilizando la API de OpenAI con parámetros opcionales especificados durante la inicialización.
+        Crea completaciones de chat utilizando la API de Azure OpenAI con parámetros opcionales especificados durante la inicialización.
 
         Args:
             messages (list of dict): Una lista de diccionarios que representan el historial de conversación.
@@ -72,7 +81,7 @@ class OpenAiToolkit:
             response_format (dict, opcional): El formato de la respuesta. Si se proporciona, este formato será utilizado. Si no se especifica, se utiliza el formato definido en la inicialización. Puede ser None.
 
         Returns:
-            dict: La respuesta de la API de OpenAI que contiene la completación del chat. Devuelve None en caso de error.
+            dict: La respuesta de la API de Azure OpenAI que contiene la completación del chat. Devuelve None en caso de error.
         """
         try:
             response = self.client.chat.completions.create(
@@ -84,6 +93,7 @@ class OpenAiToolkit:
                 stream=False,
                 tools=tools or self.tools,
                 tool_choice=self.tool_choice if (tools or self.tools) else None,
+
             )
             return response
         except Exception as e:
@@ -95,12 +105,13 @@ class OpenAiToolkit:
     ####################################################
 
     def stream(self,
-                messages,
+                messages: list,
                 temperature=None,
                 tools=None,
-                response_format=None):
+                response_format=None
+                ):
         """
-        Crea completaciones de chat utilizando la API de OpenAI con respuesta por streaming.
+        Crea completaciones de chat utilizando la API de Azure OpenAI con respuesta por streaming.
 
         Args:
             messages (list of dict): Una lista de diccionarios que representan el historial de conversación.
@@ -109,7 +120,7 @@ class OpenAiToolkit:
             response_format (dict, opcional): El formato de la respuesta. Si se proporciona, este formato será utilizado. Si no se especifica, se utiliza el formato definido en la inicialización. Puede ser None.
 
         Returns:
-            None: Imprime las respuestas de la API de OpenAI a medida que se reciben.
+            None: Imprime las respuestas de la API de Azure OpenAI a medida que se reciben.
         """
         try:
             response = self.client.chat.completions.create(
@@ -136,21 +147,21 @@ class OpenAiToolkit:
     ####################################################
     
     def str_output(self, 
-                   messages, 
+                   messages: list, 
                    response_format, 
                    temperature=None,
                    tools=None
-            ):
+                   ):
         """
-        Crea completaciones de chat utilizando la API de OpenAI con salida estructurada según un JSON Schema.
+        Crea completaciones de chat utilizando la API de Azure OpenAI con salida estructurada según un JSON Schema.
 
         Args:
             messages (list of dict): Una lista de diccionarios que representan el historial de conversación.
-            response_format (BaseModel): Un esquema de Pydantic que define la estructura esperada de la respuesta.
+            schema (BaseModel): Un esquema de Pydantic que define la estructura esperada de la respuesta.
             temperature (float, opcional): Controla la aleatoriedad de las respuestas. Si no se especifica, se utiliza la temperatura definida en la inicialización.
 
         Returns:
-            dict: La respuesta de la API de OpenAI que contiene la completación del chat estructurada según el esquema proporcionado.
+            dict: La respuesta de la API de Azure OpenAI que contiene la completación del chat estructurada según el esquema proporcionado.
         """
         try:
             completion = self.client.beta.chat.completions.parse(
@@ -235,7 +246,7 @@ class OpenAiToolkit:
 
     def transcribe(self,
                    file_path,
-                   model="whisper-1", 
+                   model="whisper", 
                    response_format="text", 
                    language=None, 
                    temperature=None,
@@ -245,7 +256,7 @@ class OpenAiToolkit:
         Transcribe un archivo de audio utilizando la API de OpenAI.
 
         Args:
-            file_path (str): Ruta al archivo de audio a transcribir.
+            file_path (str): Ruta al archivo de audio a transcribir en formato flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm.
             model (str, opcional): Modelo a utilizar para la transcripción. Por defecto es "whisper-1".
             response_format (str, opcional): Formato de la respuesta ("json", "text", "srt", "verbose_json", "vtt"). Por defecto es "json".
             language (str, opcional): Código de idioma ISO-639-1 del idioma de entrada. Si no se especifica, se detectará automáticamente ("sp" - Spanish). 
@@ -272,10 +283,9 @@ class OpenAiToolkit:
 
     def translate(self,
                   file_path, 
-                  model="whisper-1", 
-                  response_format="json", 
+                  model="whisper", 
+                  response_format="text", 
                   temperature=None,
-                  timestamp_granularities=None,
                   ):
         """
         Traduce y transcribe un archivo de audio a inglés utilizando la API de OpenAI.
@@ -297,7 +307,6 @@ class OpenAiToolkit:
                     file=audio_file,
                     response_format=response_format,
                     temperature=temperature or self.temperature,
-                    timestamp_granularities=timestamp_granularities
                 )
             return translation
         except Exception as e:
@@ -311,7 +320,7 @@ class OpenAiToolkit:
     def speech(self, 
                        text, 
                        output_file_path="output.mp3", 
-                       model="tts-1", 
+                       model="tts", 
                        voice="alloy", 
                        response_format="mp3",
                        speed=1.0):
@@ -321,7 +330,7 @@ class OpenAiToolkit:
         Args:
             text (str): El texto que se convertirá en audio.
             output_file_path (str): Ruta del archivo donde se guardará el audio generado.
-            model (str, opcional): Modelo a utilizar para la generación de voz. Opciones: "tts-1" (estándar) o "tts-1-hd" (alta definición). Por defecto es "tts-1".
+            model (str, opcional): Modelo a utilizar para la generación de voz. Opciones: "tts" (estándar) o "tts-hd" (alta definición). Por defecto es "tts".
             voice (str, opcional): Voz a utilizar. Opciones: "alloy", "echo", "fable", "onyx", "nova", "shimmer". Por defecto es "alloy".
             response_format (str, opcional): Formato del archivo de audio de salida. Opciones: "mp3", "opus", "aac", "flac", "pcm". Por defecto es "mp3".
             speed (float, opcional): Velocidad de la voz. Rango de 0.25 a 4.0. Por defecto es 1.0.
@@ -364,7 +373,4 @@ class OpenAiToolkit:
 # - top_p (float, opcional): Realiza una "nucleus sampling" considerando solo tokens que sumen el `top_p`% de probabilidad total.
 # - n (int, opcional): Número de completaciones de chat a generar por cada mensaje de entrada.
 # - seed (int, opcional): Especifica una semilla para hacer esfuerzos por reproducir resultados de manera determinista.
-# - service_tier (str, opcional): Especifica el nivel de latencia del servicio para procesar la solicitud.
-
-# Formato de respuesta:
-# - response_format (dict, opcional): Se puede especificar un formato como `json_object` o `json_schema` para garantizar que la respuesta del modelo coincida con un esquema JSON definido.
+# - service_tier

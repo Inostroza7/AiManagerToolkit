@@ -49,12 +49,20 @@ AZURE_OPENAI_EMBEDDINGS_MODEL=text-embedding-3-small
 Puedes pasar la configuración directamente en tu código:
 
 ```python
-from AiManagerToolkit import AzureAiToolkit
+from aimanagertoolkit.ai import AzureAI, OpenAI
 
-azure_ai = AzureAiToolkit(
+# Para Azure OpenAI
+azure_ai = AzureAI(
     model="gpt-4o",
     azure_endpoint="https://tu-endpoint.azure.com/",
     api_key="tu-clave-api",
+    temperature=0.7
+)
+
+# Para OpenAI
+openai_ai = OpenAI(
+    api_key="tu-clave-api-openai",
+    model="gpt-4",
     temperature=0.7
 )
 ```
@@ -62,12 +70,15 @@ azure_ai = AzureAiToolkit(
 ### 2. Ejemplo de Uso de Chat 🔄
 
 ```python
-from AiManagerToolkit import AzureAiToolkit
+from aimanagertoolkit.ai import AzureAI
+from aimanagertoolkit.messages import AzureAI
 
-azure_ai = AzureAiToolkit()
+azure_ai = AzureAI()
 
-messages = [{"role": "user", "content": "¿Cuál es el estado de mi pedido?"}]
-response = azure_ai.chat(messages)
+conversation = Message("Eres un asistente útil.")
+conversation.add_message(UserMessage("¿Cuál es el estado de mi pedido?"))
+
+response = azure_ai.chat(conversation)
 print(response.choices[0].message.content)
 ```
 

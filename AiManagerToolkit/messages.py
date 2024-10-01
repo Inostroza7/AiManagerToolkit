@@ -4,7 +4,9 @@ from string import Formatter
 from .log import log
 
 class Content(ABC):
-    """Clase base abstracta para tipos de contenido."""
+    """
+    Clase base abstracta para tipos de contenido.
+    """
 
     @abstractmethod
     def to_dict(self) -> Dict:
@@ -419,7 +421,7 @@ class Message:
                 self.history = History(arg, limit=history_limit)
             else:
                 self.add_message(arg)
-
+    
     def add_message(self, message: Union[str, Dict, UserMessage, AssistantMessage]):
         """
         Añade un mensaje a la conversación.
@@ -439,6 +441,11 @@ class Message:
         else:
             raise ValueError(f"Tipo de mensaje no soportado: {type(message)}")
 
+    def __iter__(self):
+        yield self.system_message.to_dict()
+        yield from self.history.get_history()
+
+
     def __call__(self) -> List[Dict]:
         """
         Retorna la conversación completa.
@@ -447,6 +454,9 @@ class Message:
             List[Dict]: Lista de todos los mensajes en la conversación.
         """
         return self.get_full_conversation()
+    
+    def __len__(self):
+        return len(self.history) + 1 
 
     def get_full_conversation(self) -> List[Dict]:
         """
@@ -455,7 +465,7 @@ class Message:
         Returns:
             List[Dict]: Lista de todos los mensajes en la conversación.
         """
-        return [self.system_message.to_dict()] + self.history.get_history()
+        return list(self) 
 
     def __str__(self):
         """
