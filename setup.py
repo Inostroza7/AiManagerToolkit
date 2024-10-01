@@ -6,7 +6,7 @@ with Path("requirements.txt").open() as f:
     install_requires = f.read().splitlines()
 
 setup(
-    name="AiManagerToolkit",
+    name="aimanagertoolkit", 
     version=__version__,
     author="Gustavo Inostroza",
     author_email="gusinostrozar@gmail.com",
