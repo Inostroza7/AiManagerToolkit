@@ -356,18 +356,6 @@ class History:
         """
         return len(self.history)
 
-    def __getitem__(self, index):
-        """
-        Obtiene un mensaje específico del historial.
-
-        Args:
-            index: Índice del mensaje a obtener.
-
-        Returns:
-            Dict: Mensaje en el índice especificado.
-        """
-        return self.history[index]
-
     def __iter__(self):
         """
         Permite iterar sobre los mensajes del historial.
@@ -384,7 +372,7 @@ class History:
         Returns:
             str: Representación en string del historial.
         """
-        return str(self.history)
+        return "\n".join(str(msg) for msg in self.history)
 
     def __repr__(self):
         """
@@ -395,33 +383,49 @@ class History:
         """
         return f"History(messages: {len(self.history)}, interactions: {self.interactions}, initial_limit: {self.limit})"
 
+    def __getitem__(self, index):
+        """
+        Permite la indexación directa del objeto History.
+
+        Args:
+            index: Índice del mensaje a obtener.
+
+        Returns:
+            Dict: Mensaje en el índice especificado.
+        """
+        return self.history[index]
+
 class Message:
     """Clase principal para manejar mensajes y conversaciones."""
 
-    def __init__(self, system_message: Union[SystemMessage, str], *args, history_limit: Optional[int] = None):
+    def __init__(self, system_message: Union[SystemMessage, str, History], *args, history_limit: Optional[int] = None):
         """
         Inicializa Message.
 
         Args:
-            system_message (Union[SystemMessage, str]): Mensaje del sistema inicial.
+            system_message (Union[SystemMessage, str, History]): Mensaje del sistema inicial o un objeto History.
             *args: Argumentos adicionales (pueden ser History, List[Dict], o mensajes individuales).
             history_limit (Optional[int]): Límite opcional para el historial de mensajes.
         """
-        if isinstance(system_message, str):
-            self.system_message = SystemMessage(system_message)
+        if isinstance(system_message, History):
+            self.system_message = None
+            self.history = system_message
         else:
-            self.system_message = system_message
-
-        self.history = History([], limit=history_limit)
-
-        for arg in args:
-            if isinstance(arg, History):
-                self.history = History(arg.get_history(), limit=history_limit)
-            elif isinstance(arg, list) and all(isinstance(item, dict) for item in arg):
-                self.history = History(arg, limit=history_limit)
+            if isinstance(system_message, str):
+                self.system_message = SystemMessage(system_message)
             else:
-                self.add_message(arg)
-    
+                self.system_message = system_message
+
+            self.history = History([], limit=history_limit)
+
+            for arg in args:
+                if isinstance(arg, History):
+                    self.history = History(arg.get_history(), limit=history_limit)
+                elif isinstance(arg, list) and all(isinstance(item, dict) for item in arg):
+                    self.history = History(arg, limit=history_limit)
+                else:
+                    self.add_message(arg)
+
     def add_message(self, message: Union[str, Dict, UserMessage, AssistantMessage]):
         """
         Añade un mensaje a la conversación.
@@ -442,7 +446,8 @@ class Message:
             raise ValueError(f"Tipo de mensaje no soportado: {type(message)}")
 
     def __iter__(self):
-        yield self.system_message.to_dict()
+        if self.system_message:
+            yield self.system_message.to_dict()
         yield from self.history.get_history()
 
 
@@ -460,12 +465,16 @@ class Message:
 
     def get_full_conversation(self) -> List[Dict]:
         """
-        Obtiene la conversación completa, incluyendo el mensaje del sistema.
+        Obtiene la conversación completa, incluyendo el mensaje del sistema si existe.
 
         Returns:
             List[Dict]: Lista de todos los mensajes en la conversación.
         """
-        return list(self) 
+        conversation = []
+        if self.system_message:
+            conversation.append(self.system_message.to_dict())
+        conversation.extend(self.history.get_history())
+        return conversation
 
     def __str__(self):
         """
