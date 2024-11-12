@@ -16,6 +16,9 @@ class Log:
         """
         self.logger = logging.getLogger(name)
         self.logger.handlers = []  # Limpiar handlers anteriores
+
+        # Evitar la propagación de logs al logger raíz
+        self.logger.propagate = False
         
         # Cargar nivel de logging desde argumento o variable de entorno
         log_level = log_level or os.getenv('LOG_LEVEL', 'WARNING').upper()
@@ -38,6 +41,7 @@ class Log:
 
         # Configurar el nivel de logging específico para `httpx`
         httpx_logger = logging.getLogger('httpx')
+        httpx_logger.handlers = [] 
         httpx_logger.setLevel(logging.WARNING)
         httpx_logger.addHandler(console_handler)
         if log_to_file:
@@ -47,4 +51,12 @@ class Log:
         """Permite que las llamadas al logger se realicen directamente desde la instancia de Log."""
         return getattr(self.logger, name)
 
-log = Log()
+# Configurar el logger raíz para manejar logs no capturados
+root_logger = logging.getLogger()
+root_logger.handlers = []  # Limpiar handlers existentes
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+root_logger.addHandler(console_handler)
+
+logger = Log()

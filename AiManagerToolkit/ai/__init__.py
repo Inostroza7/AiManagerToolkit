@@ -1,7 +1,9 @@
-from .azure_ai import AzureAI
-from .openai_ai import OpenAI
+from .azure_ai import AzureAI, AsyncAzureAI
+from .openai_ai import OpenAI, AsyncOpenAI
 
 __all__ = [
-    'AzureAI', 
+    'AzureAI',
+    'AsyncAzureAI',
     'OpenAI',
+    'AsyncOpenAI',
     ]

@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import List, Union, Dict, Optional
 from string import Formatter
-from .log import log
+from .log import Log
+
+logger = Log(__name__)
 
 class Content(ABC):
     """
@@ -29,7 +31,7 @@ class TextContent(Content):
             text (str): El contenido de texto.
         """
         self.text = text
-        log.info(f"TextContent creado: {text[:50]}...")
+        logger.info(f"TextContent creado: {text[:50]}...")
 
     def to_dict(self) -> Dict:
         """
@@ -51,7 +53,7 @@ class ImageUrlContent(Content):
             url (str): La URL de la imagen.
         """
         self.url = url
-        log.info(f"ImageUrlContent creado: {url}")
+        logger.info(f"ImageUrlContent creado: {url}")
 
     def to_dict(self) -> Dict:
         """
@@ -88,10 +90,10 @@ class BaseMessage(ABC):
                 elif key.startswith('url'):
                     self.content.append(ImageUrlContent(value))
         else:
-            log.error("Se proporcionaron argumentos inválidos a BaseMessage")
+            logger.error("Se proporcionaron argumentos inválidos a BaseMessage")
             raise ValueError("Argumentos inválidos")
 
-        log.info(f"{self.__class__.__name__} creado con {len(self.content)} elemento(s) de contenido")
+        logger.info(f"{self.__class__.__name__} creado con {len(self.content)} elemento(s) de contenido")
 
     @abstractmethod
     def role(self) -> str:
@@ -187,7 +189,7 @@ class PromptTemplate:
         """
         self.template = template
         self.field_names = [fname for _, fname, _, _ in Formatter().parse(template) if fname is not None]
-        log.info(f"PromptTemplate creado con campos: {', '.join(self.field_names)}")
+        logger.info(f"PromptTemplate creado con campos: {', '.join(self.field_names)}")
 
     def __call__(self, *args, **kwargs):
         """
@@ -205,33 +207,33 @@ class PromptTemplate:
                         o si se mezclan argumentos posicionales y de palabras clave.
         """
         if args and kwargs:
-            log.error("Se mezclaron argumentos posicionales y de palabras clave")
+            logger.error("Se mezclaron argumentos posicionales y de palabras clave")
             raise ValueError("No se pueden mezclar argumentos posicionales y de palabras clave")
 
         if args:
             if len(args) > len(self.field_names):
                 extra_args = len(args) - len(self.field_names)
-                log.error(f"Se proporcionaron {extra_args} argumentos de más")
+                logger.error(f"Se proporcionaron {extra_args} argumentos de más")
                 raise ValueError(f"Se proporcionaron {extra_args} argumentos de más")
             elif len(args) < len(self.field_names):
                 missing_args = ', '.join(self.field_names[len(args):])
-                log.error(f"Faltan los siguientes argumentos: {missing_args}")
+                logger.error(f"Faltan los siguientes argumentos: {missing_args}")
                 raise ValueError(f"Faltan los siguientes argumentos: {missing_args}")
             return self.template.format(**dict(zip(self.field_names, args)))
         elif kwargs:
             missing_args = [field for field in self.field_names if field not in kwargs]
             if missing_args:
                 missing_args_str = ', '.join(missing_args)
-                log.error(f"Faltan los siguientes argumentos: {missing_args_str}")
+                logger.error(f"Faltan los siguientes argumentos: {missing_args_str}")
                 raise ValueError(f"Faltan los siguientes argumentos: {missing_args_str}")
             extra_args = [key for key in kwargs if key not in self.field_names]
             if extra_args:
                 extra_args_str = ', '.join(extra_args)
-                log.error(f"Se proporcionaron argumentos adicionales que no serán utilizados: {extra_args_str}")
+                logger.error(f"Se proporcionaron argumentos adicionales que no serán utilizados: {extra_args_str}")
                 raise ValueError(f"Sobran los siguientes argumentos: {extra_args_str}")
             return self.template.format(**kwargs)
         else:
-            log.error(f"No se proporcionaron argumentos. Se requieren: {', '.join(self.field_names)}")
+            logger.error(f"No se proporcionaron argumentos. Se requieren: {', '.join(self.field_names)}")
             raise ValueError(f"No se proporcionaron argumentos. Se requieren: {', '.join(self.field_names)}")
 
 class SystemTemplate(PromptTemplate):

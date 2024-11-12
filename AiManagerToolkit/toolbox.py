@@ -2,11 +2,10 @@ import os
 import importlib
 from pydantic import BaseModel
 from typing import List, Dict, Any
-import logging
+from .log import Log
 
-# Configuración básica del logger
-logging.basicConfig(level=logging.INFO)
-log = logging.getLogger(__name__)
+logger = Log(__name__)  
+
 
 class Tool(BaseModel):
     """
@@ -37,7 +36,7 @@ class Tool(BaseModel):
         try:
             Toolbox.register_tool(self)  # Registro automático en el Toolbox global
         except Exception as e:
-            log.error(f"Error al registrar la herramienta {self.name}: {e}")
+            logger.error(f"Error al registrar la herramienta {self.name}: {e}")
 
 class Toolbox:
     """
@@ -58,10 +57,10 @@ class Toolbox:
             tool (Tool): Instancia de la herramienta a registrar.
         """
         try:
-            log.info(f"Registrando herramienta globalmente: {tool.name}")
+            logger.info(f"Registrando herramienta globalmente: {tool.name}")
             cls._global_tools.append(tool)
         except Exception as e:
-            log.error(f"Error al registrar la herramienta {tool.name}: {e}")
+            logger.error(f"Error al registrar la herramienta {tool.name}: {e}")
 
     @classmethod
     def get_tools(cls) -> List[dict]:
@@ -72,10 +71,10 @@ class Toolbox:
             List[dict]: Lista de herramientas en formato diccionario.
         """
         try:
-            log.info(f"Obteniendo lista de herramientas registradas. Total: {len(cls._global_tools)} herramientas.")
+            logger.info(f"Obteniendo lista de herramientas registradas. Total: {len(cls._global_tools)} herramientas.")
             return [tool.dict() for tool in cls._global_tools]
         except Exception as e:
-            log.error(f"Error al obtener la lista de herramientas: {e}")
+            logger.error(f"Error al obtener la lista de herramientas: {e}")
             return []
 
     @classmethod
